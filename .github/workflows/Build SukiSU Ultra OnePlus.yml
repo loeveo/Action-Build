@@ -393,6 +393,24 @@ jobs:
             rm -f "$dir/android/abi_gki_protected_exports_"* 2>/dev/null || echo "No protected exports in $dir"
           done
 
+          # 新添加的步骤：应用外部 LXC commit 补丁
+      - name: Apply External LXC Commit Patch
+        run: |
+          cd kernel_workspace/kernel_platform/common  # 进入 common 内核源码目录（如果 commit 针对其他子目录如 msm-kernel，请调整）
+          
+          # 从 commit 的 .patch URL 下载原始补丁
+          curl -o lxc-support.patch https://github.com/realme-kernel-opensource/realme_GT7pro-AndroidB-common-source/commit/b04a31af94ec3ca3018a3392ca684ee8e7497b4e.patch
+          
+          # 应用补丁（使用 -F 3 进行模糊匹配，以处理细微的行偏移；-p1 去除 'a/' 前缀）
+          patch -p1 -F 3 < lxc-support.patch || true  # '|| true' 用于在轻微失败时继续；如果需要严格错误处理，请移除
+          
+          # 可选：提交更改以便跟踪
+          git add -A
+          git commit -m "Applied LXC support commit from https://github.com/realme-kernel-opensource/realme_GT7pro-AndroidB-common-source/commit/b04a31af94ec3ca3018a3392ca684ee8e7497b4e" || true
+          
+          # 清理补丁文件
+          rm lxc-support.patch
+
       - name: Kernel Version Handling
         run: |
           cd kernel_workspace/kernel_platform
